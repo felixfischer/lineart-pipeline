@@ -1,0 +1,9 @@
+# Core pipeline dependencies (pin via `uv pip freeze` for exact repro)
+numpy>=1.26
+opencv-python-headless>=4.9
+pillow>=10.0
+scikit-learn>=1.4
+
+# System binaries (install separately, see setup.sh):
+#   potrace – bitmap -> Bezier vector tracing   (brew install potrace / apt install potrace)
+#   resvg   – SVG -> PNG preview rendering      (brew install resvg; optional, previews are skipped if missing)
