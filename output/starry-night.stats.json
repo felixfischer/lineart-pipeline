@@ -1,0 +1,41 @@
+{
+  "work_size": [
+    1600,
+    1268
+  ],
+  "texture": 1.0,
+  "regions": 482,
+  "chains": 1445,
+  "palette": [
+    "#575c5b",
+    "#a3b9c2",
+    "#3c5c89",
+    "#292d2a",
+    "#708cab",
+    "#c1c49e",
+    "#2d3341",
+    "#2a4277",
+    "#baa017",
+    "#1c2a53",
+    "#8ca5bf",
+    "#7e8c81",
+    "#5a79a9",
+    "#566a82",
+    "#b0c2b2",
+    "#465d9b",
+    "#2e4189",
+    "#cccd7f"
+  ],
+  "timings_s": {
+    "preprocess": 24.34,
+    "edges": 14.04,
+    "segment": 3.05,
+    "palette": 2.75,
+    "vectorize": 0.62,
+    "write": 0.83
+  },
+  "svg_bytes": {
+    "lines": 269046,
+    "color": 815553
+  }
+}
