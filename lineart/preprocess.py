@@ -10,6 +10,18 @@ def load_image(path) -> np.ndarray:
     img = cv2.imread(str(path), cv2.IMREAD_UNCHANGED)
     if img is None:
         raise ValueError(f"cannot read image: {path}")
+    return _to_bgr8(img)
+
+
+def decode_image(data: bytes) -> np.ndarray:
+    """Like ``load_image`` but from encoded bytes (e.g. an upload)."""
+    img = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_UNCHANGED)
+    if img is None:
+        raise ValueError("cannot decode image data")
+    return _to_bgr8(img)
+
+
+def _to_bgr8(img: np.ndarray) -> np.ndarray:
     if img.ndim == 2:
         img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
     elif img.shape[2] == 4:
@@ -31,6 +43,8 @@ def resize_long_side(bgr: np.ndarray, long_side: int) -> np.ndarray:
 
 def normalize_contrast(bgr: np.ndarray, clip: float = 1.5) -> np.ndarray:
     """Mild CLAHE on the L channel; keeps hues, lifts flat/faded scans."""
+    if clip <= 0:
+        return bgr.copy()
     lab = cv2.cvtColor(bgr, cv2.COLOR_BGR2LAB)
     clahe = cv2.createCLAHE(clipLimit=clip, tileGridSize=(8, 8))
     lab[..., 0] = clahe.apply(lab[..., 0])

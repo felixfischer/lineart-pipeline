@@ -21,8 +21,9 @@ def render_png(svg: Path, png: Path, width: int = 1600) -> bool:
     return True
 
 
-def save_original(src: Path, dst: Path, long_side: int = 1600) -> None:
-    img = cv2.imread(str(src))
+def save_original(src, dst: Path, long_side: int = 1600) -> None:
+    """``src`` is an image path or an already decoded BGR array."""
+    img = cv2.imread(str(src)) if isinstance(src, (str, Path)) else src
     h, w = img.shape[:2]
     s = min(1.0, long_side / max(h, w))
     if s < 1:

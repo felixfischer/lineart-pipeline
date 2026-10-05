@@ -18,6 +18,7 @@ gradient on a smoothed image) is used so the pipeline always runs.
 from __future__ import annotations
 
 import logging
+from functools import lru_cache
 from pathlib import Path
 
 import cv2
@@ -112,14 +113,26 @@ def classical_edges(lab: np.ndarray) -> np.ndarray:
     return np.clip(acc, 0, 1)
 
 
+@lru_cache(maxsize=2)
+def _dexined(threads: int) -> DexiNed:
+    return DexiNed(ensure_dexined(), threads=threads)
+
+
 def edge_map(bgr: np.ndarray, lab: np.ndarray, backend: str = "auto",
-             global_weight: float = 0.5, threads: int = 0) -> np.ndarray:
-    """Return fused edge probability map in [0, 1] at the size of ``bgr``."""
+             global_weight: float = 0.5, threads: int = 0,
+             parts: dict | None = None) -> np.ndarray:
+    """Return fused edge probability map in [0, 1] at the size of ``bgr``.
+
+    If ``parts`` is given it receives the backend actually used and, for
+    DexiNed, the raw ``global`` and ``tiled`` maps (for inspection).
+    """
+    parts = {} if parts is None else parts
     if backend in ("auto", "dexined"):
         try:
-            net = DexiNed(ensure_dexined(), threads=threads)
+            net = _dexined(threads)
             g = net.global_pass(bgr)
             t = net.tiled_pass(bgr)
+            parts.update({"backend": "dexined", "global": g, "tiled": t})
             # Geometric blend: fine localisation from the tiles, gated by the
             # coarse/semantic evidence of the global pass.
             g_blur = cv2.GaussianBlur(g, (0, 0), max(bgr.shape[:2]) / 400)
@@ -130,4 +143,6 @@ def edge_map(bgr: np.ndarray, lab: np.ndarray, backend: str = "auto",
             if backend == "dexined":
                 raise
             log.warning("DexiNed unavailable (%s); using classical edges", exc)
+            parts["fallback_reason"] = str(exc)
+    parts["backend"] = "classical"
     return classical_edges(lab)

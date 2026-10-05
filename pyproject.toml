@@ -25,9 +25,13 @@ dev = ["cairosvg>=2.7", "pytest>=8"]
 
 [project.scripts]
 lineart = "lineart.cli:main"
+lineart-gui = "lineart.gui.__main__:main"
 
 [tool.setuptools]
-packages = ["lineart"]
+packages = ["lineart", "lineart.gui"]
+
+[tool.setuptools.package-data]
+"lineart.gui" = ["static/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

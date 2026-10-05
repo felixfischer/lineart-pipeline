@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lineart Studio</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23222'/%3E%3Cpath d='M6 24c4-10 8-14 12-12s4 8 8 0' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">Lineart <b>Studio</b></div>
+  <div class="group">
+    <select id="source" aria-label="Bild auswählen"></select>
+    <label class="btn" for="upload" title="Oder Bild in das Fenster ziehen">Hochladen…</label>
+    <input type="file" id="upload" accept="image/*" hidden>
+  </div>
+  <div class="group">
+    <label class="field">Detailstufe
+      <select id="preset">
+        <option value="low">niedrig</option>
+        <option value="medium">mittel</option>
+        <option value="high">hoch</option>
+      </select>
+    </label>
+    <label class="field">Berechnen
+      <select id="runMode">
+        <option value="stage">bis zum gewählten Schritt</option>
+        <option value="all">immer bis zum Ende</option>
+        <option value="manual">nur manuell</option>
+      </select>
+    </label>
+  </div>
+  <div id="progress" class="progress" hidden><span class="spinner"></span><span id="progressText"></span></div>
+  <div class="spacer"></div>
+  <button id="runBtn" class="btn">Alles berechnen</button>
+  <button id="exportBtn" class="btn primary">Exportieren…</button>
+</header>
+
+<div id="errorBar" class="errorbar" hidden></div>
+
+<div class="layout">
+  <nav class="stepper" aria-label="Pipeline-Schritte"><ol id="stepper"></ol></nav>
+
+  <main class="viewer">
+    <div class="viewbar">
+      <div id="views" class="tabs" role="tablist"></div>
+      <div class="viewtools">
+        <label class="blend" title="Original unter das Ergebnis blenden (Taste O gedrückt halten = nur Original)">
+          Original <input id="blend" type="range" min="0" max="100" value="0">
+        </label>
+        <div class="zoom">
+          <button class="icon" id="zoomOut" title="Verkleinern">−</button>
+          <button class="ghost" id="zoomLabel" title="Einpassen (F)">100 %</button>
+          <button class="icon" id="zoomIn" title="Vergrößern">+</button>
+          <button class="ghost" id="zoom1" title="Originalpixel (1)">1:1</button>
+        </div>
+      </div>
+    </div>
+    <div id="stageWrap" class="stage-wrap">
+      <div id="canvas" class="canvas">
+        <img id="under" alt="" draggable="false">
+        <img id="layer" alt="" draggable="false">
+      </div>
+      <div id="badge" class="badge" hidden></div>
+      <div id="empty" class="empty" hidden></div>
+    </div>
+    <p id="viewHelp" class="viewhelp"></p>
+  </main>
+
+  <aside class="panel" id="panel"></aside>
+</div>
+
+<dialog id="exportDlg">
+  <form method="dialog" class="dlg">
+    <h2>Exportieren</h2>
+    <p class="muted">Speichert SVGs, Vorschau-PNGs, <code>stats.json</code> und die Konfiguration in
+      <code id="outDir"></code>.</p>
+    <div class="row">
+      <label><input type="radio" name="mode" value="both" checked> beide SVGs</label>
+      <label><input type="radio" name="mode" value="lines"> nur Ausmalvorlage</label>
+      <label><input type="radio" name="mode" value="color"> nur koloriert</label>
+    </div>
+    <label class="row"><input type="checkbox" id="exportPng" checked> PNG-Vorschauen rendern</label>
+    <div id="exportResult" class="export-result"></div>
+    <h3>Direkt herunterladen</h3>
+    <div class="row downloads">
+      <a class="btn" data-dl="lines" href="#">lines.svg</a>
+      <a class="btn" data-dl="color" href="#">color.svg</a>
+      <a class="btn" data-dl="config" href="#">config.json</a>
+    </div>
+    <h3>Gleiche Einstellungen per CLI</h3>
+    <div class="cli"><code id="cliCmd"></code><button type="button" class="btn small" id="copyCli">Kopieren</button></div>
+    <p class="muted small">Alternativ: <code id="cliCfg"></code></p>
+    <div class="dlg-actions">
+      <button value="cancel" class="btn">Schließen</button>
+      <button type="button" id="doExport" class="btn primary">In Ausgabeordner speichern</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="drop" class="drop" hidden><div>Bild hier ablegen</div></div>
+<script src="/static/app.js"></script>
+</body>
+</html>

@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 from . import report, verify
-from .pipeline import PRESETS, make_config, process_image
+from .pipeline import PRESETS, config_from_dict, make_config, process_image
 
 IMAGE_EXT = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff"}
 
@@ -45,6 +47,23 @@ def build_parser() -> argparse.ArgumentParser:
     g.add_argument("--work-size", type=int, help="working resolution, long side (px)")
     g.add_argument("--edge-backend", choices=("auto", "dexined", "classical"))
     g.add_argument("--seed", type=int)
+    a = ap.add_argument_group("advanced (defaults are tuned; see the GUI for their effect)")
+    a.add_argument("--clahe-clip", type=float, help="contrast normalisation strength (0 = off)")
+    a.add_argument("--global-weight", type=float,
+                   help="share of the coarse DexiNed pass in the edge map 0..1")
+    a.add_argument("--min-width", type=float, help="absorb slivers thinner than this (px)")
+    a.add_argument("--edge-weight", type=float,
+                   help="merge cost: share of border edge strength vs. colour 0..1")
+    a.add_argument("--color-scale", type=float,
+                   help="merge cost: Lab ΔE that counts as fully different")
+    a.add_argument("--chroma-boost", type=float, help="palette saturation multiplier")
+    a.add_argument("--color-merge-edge", type=float,
+                   help="merge same-colour neighbours whose border is weaker than this 0..1")
+    a.add_argument("--simplify-eps", type=float, help="Douglas-Peucker tolerance (px)")
+    a.add_argument("--major-threshold", type=float,
+                   help="border strength from which a line is drawn bold 0..1")
+    ap.add_argument("--config", type=Path,
+                    help="JSON config (e.g. exported from the GUI); flags override it")
     ap.add_argument("--no-preview", action="store_true", help="skip PNG previews")
     ap.add_argument("--no-report", action="store_true", help="skip output/index.html")
     ap.add_argument("--debug", action="store_true", help="write intermediate maps")
@@ -52,15 +71,29 @@ def build_parser() -> argparse.ArgumentParser:
     return ap
 
 
+def _apply_flags(cfg, args):
+    """Explicit command line flags win over preset and --config."""
+    cfg = replace(cfg, **{k: v for k, v in dict(
+        target_regions=args.target_regions, colors=args.colors, smoothing=args.smoothing,
+        min_area=args.min_area, label_sigma=args.label_sigma, curve_sigma=args.curve_sigma,
+        line_width=args.line_width, work_size=args.work_size, edge_backend=args.edge_backend,
+        seed=args.seed, clahe_clip=args.clahe_clip, global_weight=args.global_weight,
+        min_width=args.min_width, chroma_boost=args.chroma_boost,
+        color_merge_edge=args.color_merge_edge, simplify_eps=args.simplify_eps,
+        major_threshold=args.major_threshold).items() if v is not None})
+    merge = {k: v for k, v in dict(edge_weight=args.edge_weight,
+                                   color_scale=args.color_scale).items() if v is not None}
+    return replace(cfg, merge=replace(cfg.merge, **merge)) if merge else cfg
+
+
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     logging.basicConfig(level=logging.WARNING if args.quiet else logging.INFO,
                         format="%(message)s")
-    cfg = make_config(
-        args.detail_level, target_regions=args.target_regions, colors=args.colors,
-        smoothing=args.smoothing, min_area=args.min_area, label_sigma=args.label_sigma,
-        curve_sigma=args.curve_sigma, line_width=args.line_width,
-        work_size=args.work_size, edge_backend=args.edge_backend, seed=args.seed)
+    cfg = make_config(args.detail_level)
+    if args.config:
+        cfg = config_from_dict(json.loads(args.config.read_text()), cfg)
+    cfg = _apply_flags(cfg, args)
     out: Path = args.output
     out.mkdir(parents=True, exist_ok=True)
     results, failed = [], 0

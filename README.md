@@ -52,9 +52,33 @@ python pipeline.py -i <bild|ordner> [-o output/] [--mode lines|color|both] [-d l
 | `--line-width F` | Multiplikator für alle Strichstärken |
 | `--work-size PX` | Arbeitsauflösung, lange Kante (Default 1600) |
 | `--edge-backend` | `auto` (Default), `dexined` oder `classical` (ohne Modell) |
+| `--config FILE` | Komplette Konfiguration als JSON (z. B. aus der GUI exportiert); explizite Flags haben Vorrang |
 | `--no-preview`, `--no-report`, `--debug`, `-q` | PNGs / Report weglassen, Zwischenbilder speichern, leise |
 
+Erweiterte Feinparameter (Defaults sind abgestimmt; ihre Wirkung lässt sich in der GUI direkt beobachten): `--clahe-clip`, `--global-weight`, `--min-width`, `--edge-weight`, `--color-scale`, `--chroma-boost`, `--color-merge-edge`, `--simplify-eps`, `--major-threshold`. `python pipeline.py -h` beschreibt alle.
+
 Exit-Code ≠ 0, wenn eine erzeugte SVG die Verifikation nicht besteht.
+
+### Interaktive GUI (Lineart Studio)
+
+```bash
+.venv/bin/python gui.py                      # öffnet http://127.0.0.1:8765/ im Browser
+.venv/bin/python gui.py source/mein-bild.jpg -o output/ --port 8765
+```
+
+![Lineart Studio](docs/gui.jpg)
+
+Eine lokale Web-Oberfläche, die die Pipeline Schritt für Schritt begleitet. Sie braucht keine zusätzlichen Abhängigkeiten (Python-Standardbibliothek + Vanilla-JS).
+
+- **Links: die sechs Pipeline-Schritte** – Vorverarbeitung, Kantenerkennung, Segmentierung, Farbpalette, Vektorisierung, Linienstil. Der Status zeigt, ob ein Schritt *aktuell*, *veraltet* (Parameter geändert) oder noch *offen* ist, dazu die Rechenzeit.
+- **Mitte: Zwischenergebnisse** des gewählten Schritts in mehreren Ansichten, z. B. globaler vs. gekachelter DexiNed-Pass, Watershed-Übersegmentierung, durch gleiche Farbe entfernte Grenzen (rot), Pixeltreppen vs. Bézier-Kurven oder die Linienhierarchie. Zoom mit Mausrad, Verschieben per Ziehen, Doppelklick = einpassen. Der Regler *Original* blendet das Eingabebild darunter ein; Taste `O` gedrückt halten zeigt nur das Original. Zoom und Ausschnitt bleiben beim Wechsel zwischen Schritten erhalten, sodass dieselbe Stelle über alle Stufen verglichen werden kann.
+- **Rechts: Erklärung und Parameter** des Schritts mit Hilfetexten, Markierung geänderter Werte (↺ setzt auf das Preset zurück) und Kennzahlen des Ergebnisses (Flächenzahl, Texturmaß, Palette, Dateigrößen …).
+- **Inkrementelle Neuberechnung:** Jeder Schritt wird gecacht. Eine Änderung rechnet nur den betroffenen Schritt und die nachfolgenden neu – Linienstil-Parameter reagieren praktisch live, Segmentierung in 1–3 s. Berechnet wird wahlweise bis zum gewählten Schritt, immer bis zum Ende oder nur manuell.
+- **Export** schreibt SVGs, PNG-Vorschauen, `stats.json` und `<name>.config.json` in den Ausgabeordner und prüft die SVGs wie die CLI. Der Dialog zeigt außerdem den äquivalenten CLI-Aufruf; `python pipeline.py -i bild.jpg --config output/bild.config.json` erzeugt byte-identische SVGs.
+
+Empfohlener Ablauf: Arbeitsauflösung auf 800 px senken (alles rechnet ein Vielfaches schneller), Parameter einstellen, dann für den Export wieder auf 1600 px oder höher stellen. Flächengrößen, Glättungsradien und Strichstärken skalieren mit der Auflösung, die Ergebnisse sind aber nicht pixelgleich.
+
+Bilder lassen sich über die Auswahlliste (Inhalt von `source/`, änderbar mit `-s`), den Button *Hochladen* oder per Drag & drop öffnen. Der Server lauscht standardmäßig nur auf `127.0.0.1`.
 
 ### Neue Bilder verarbeiten
 
@@ -65,7 +89,7 @@ Bild nach `source/` legen (oder beliebigen Pfad angeben) und z. B. `python pipel
 - **Zackige Linien bei Gemälden:** `--label-sigma 5`
 - **Für großformatigen Druck:** `--work-size 2400` (dauert etwa doppelt so lange)
 
-Tests: `.venv/bin/python -m pytest` (synthetisches Bild, klassisches Backend, < 2 s).
+Tests: `.venv/bin/python -m pytest` (synthetisches Bild, klassisches Backend, Session-Cache und HTTP-API der GUI, < 5 s).
 
 ---
 
@@ -139,7 +163,8 @@ Die Architektur lässt beides als zusätzliche Kantenquelle in `edges.edge_map` 
 ```
 pipeline.py            CLI-Einstieg (python pipeline.py …)
 lineart/cli.py         Argument-Parsing, Batch-Lauf, Verifikation, Report
-lineart/pipeline.py    Orchestrierung, Presets (Config)
+gui.py                 GUI-Einstieg (python gui.py …)
+lineart/pipeline.py    Orchestrierung als einzeln aufrufbare Stufen (STAGES, Run), Presets (Config)
 lineart/preprocess.py  Stufe 1
 lineart/edges.py       Stufe 2a (DexiNed global/gekachelt, klassischer Fallback)
 lineart/segment.py     Stufe 2b/3 (Watershed, RegionGraph, Bereinigung)
@@ -149,6 +174,8 @@ lineart/vectorize.py   Glättung, Béziers, SVG-Writer
 lineart/verify.py      SVG-Prüfung (XML, viewBox, Layer, Füll-Abdeckung)
 lineart/report.py      PNG-Vorschau, output/index.html
 lineart/models.py      Download, Checksumme, FP32-Faltung der Gewichte
+lineart/gui/           Web-GUI: server.py (HTTP-API, Worker-Thread), session.py (Stufen-Cache,
+                       Ansichten), spec.py (Texte, Parameter, Ansichten je Stufe), static/ (Frontend)
 tests/                 pytest
 ```
 

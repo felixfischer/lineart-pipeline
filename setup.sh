@@ -24,3 +24,4 @@ fi
 
 echo
 echo "Done. Run:  .venv/bin/python pipeline.py -i source/ -o output/"
+echo "      GUI:  .venv/bin/python gui.py"

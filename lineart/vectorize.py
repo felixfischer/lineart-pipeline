@@ -167,6 +167,8 @@ class LineStyle:
     frame_width: float = 4.0
     major_threshold: float = 0.42
     color: str = "#000000"
+    major_color: str | None = None   # per-level colours (GUI inspection view)
+    minor_color: str | None = None
 
 
 def _line_groups(graph: Graph, style: LineStyle, indent: str = "  ") -> list[str]:
@@ -178,12 +180,18 @@ def _line_groups(graph: Graph, style: LineStyle, indent: str = "  ") -> list[str
             _segs_d(c.beziers, False, True))
     W, H = graph.width, graph.height
     hw = style.frame_width / 2
+
+    def stroke(c):
+        return f' stroke="{c}"' if c else ""
+
     out = [
         f'{indent}<g id="line-art" fill="none" stroke="{style.color}" '
         'stroke-linecap="round" stroke-linejoin="round">',
-        f'{indent}  <path id="lines-minor" stroke-width="{_f(style.minor_width)}" '
+        f'{indent}  <path id="lines-minor"{stroke(style.minor_color)} '
+        f'stroke-width="{_f(style.minor_width)}" '
         f'd="{"".join(minor)}"/>',
-        f'{indent}  <path id="lines-major" stroke-width="{_f(style.major_width)}" '
+        f'{indent}  <path id="lines-major"{stroke(style.major_color)} '
+        f'stroke-width="{_f(style.major_width)}" '
         f'd="{"".join(major)}"/>',
         f'{indent}  <rect id="frame" x="{_f(hw)}" y="{_f(hw)}" width="{_f(W - 2 * hw)}" '
         f'height="{_f(H - 2 * hw)}" stroke-width="{_f(style.frame_width)}"/>',
