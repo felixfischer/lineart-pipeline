@@ -35,16 +35,23 @@ def build_parser() -> argparse.ArgumentParser:
     ap.add_argument("-d", "--detail-level", choices=tuple(PRESETS), default="medium",
                     help="preset for region count, palette size and smoothing")
     g = ap.add_argument_group("fine tuning (override the preset)")
+    # Defaults shown are for -d medium; an unset flag inherits the active preset.
     g.add_argument("--regions", type=int, dest="target_regions",
-                   help="target number of colourable areas")
-    g.add_argument("--colors", type=int, help="palette size of the colour version")
+                   help="target number of colourable areas (medium: 600)")
+    g.add_argument("--colors", type=int,
+                   help="palette size of the colour version (medium: 18)")
     g.add_argument("--smoothing", type=float,
-                   help="edge-preserving noise filter strength 0..1")
-    g.add_argument("--min-area", type=int, help="smallest area in px (at 1600 px)")
-    g.add_argument("--label-sigma", type=float, help="border smoothing radius (px)")
-    g.add_argument("--curve-sigma", type=float, help="vector curve smoothing (px)")
-    g.add_argument("--line-width", type=float, help="stroke width multiplier")
-    g.add_argument("--work-size", type=int, help="working resolution, long side (px)")
+                   help="edge-preserving noise filter strength 0..1 (medium: 0.5; 0 = off)")
+    g.add_argument("--min-area", type=int,
+                   help="smallest area in px, at 1600 px (medium: 180)")
+    g.add_argument("--label-sigma", type=float,
+                   help="border smoothing radius in px (medium: 3.0; 0 = off)")
+    g.add_argument("--curve-sigma", type=float,
+                   help="vector curve smoothing in px (medium: 1.6; 0 = off)")
+    g.add_argument("--line-width", type=float,
+                   help="stroke width multiplier (medium: 1.0)")
+    g.add_argument("--work-size", type=int,
+                   help="working resolution, long side in px (default 1600)")
     g.add_argument("--edge-backend", choices=("auto", "dexined", "classical"))
     g.add_argument("--seed", type=int)
     a = ap.add_argument_group("advanced (defaults are tuned; see the GUI for their effect)")

@@ -44,18 +44,20 @@ python pipeline.py -i <bild|ordner> [-o output/] [--mode lines|color|both] [-d l
 | `-o/--output` | Zielverzeichnis (Default `output/`) |
 | `--mode` | `lines`, `color` oder `both` (Default) |
 | `-d/--detail-level` | Preset `low` (≈ 280 Flächen, 12 Farben), `medium` (≈ 600, 18), `high` (≈ 1100, 26) |
-| `--regions N` | Zielanzahl der Ausmalflächen |
-| `--colors N` | Palettengröße der kolorierten Fassung |
-| `--smoothing 0..1` | Stärke der kantenerhaltenden Rauschfilterung |
-| `--min-area PX` | Kleinste erlaubte Fläche (bezogen auf 1600 px Kantenlänge) |
-| `--label-sigma` / `--curve-sigma` | Glättung der Regionsgrenzen (Raster bzw. Vektor) |
-| `--line-width F` | Multiplikator für alle Strichstärken |
+| `--regions N` | Zielanzahl der Ausmalflächen (Default 600) |
+| `--colors N` | Palettengröße der kolorierten Fassung (Default 18) |
+| `--smoothing 0..1` | Stärke der kantenerhaltenden Rauschfilterung (Default 0.5; 0 = aus) |
+| `--min-area PX` | Kleinste erlaubte Fläche, bezogen auf 1600 px Kantenlänge (Default 180) |
+| `--label-sigma` / `--curve-sigma` | Glättung der Regionsgrenzen, Raster bzw. Vektor (Default 3.0 / 1.6; 0 = aus) |
+| `--line-width F` | Multiplikator für alle Strichstärken (Default 1.0) |
 | `--work-size PX` | Arbeitsauflösung, lange Kante (Default 1600) |
 | `--edge-backend` | `auto` (Default), `dexined` oder `classical` (ohne Modell) |
 | `--config FILE` | Komplette Konfiguration als JSON (z. B. aus der GUI exportiert); explizite Flags haben Vorrang |
 | `--no-preview`, `--no-report`, `--debug`, `-q` | PNGs / Report weglassen, Zwischenbilder speichern, leise |
 
 Erweiterte Feinparameter (Defaults sind abgestimmt; ihre Wirkung lässt sich in der GUI direkt beobachten): `--clahe-clip`, `--global-weight`, `--min-width`, `--edge-weight`, `--color-scale`, `--chroma-boost`, `--color-merge-edge`, `--simplify-eps`, `--major-threshold`. `python pipeline.py -h` beschreibt alle.
+
+Die genannten Defaults gelten für `-d medium`. Ein nicht gesetzter Feinjustage-Parameter übernimmt den Wert des aktiven Presets; `low`/`high` verschieben u. a. `--smoothing` (0.7 / 0.35), `--regions` (280 / 1100), `--min-area` (420 / 90), `--label-sigma` (4.0 / 2.0) und `--curve-sigma` (2.0 / 1.3). Ein explizit gesetzter Parameter überschreibt den Preset. Keiner der Glättungsparameter ist standardmäßig aus — „aus“ erfordert explizit `0`.
 
 Exit-Code ≠ 0, wenn eine erzeugte SVG die Verifikation nicht besteht.
 

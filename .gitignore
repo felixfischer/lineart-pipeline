@@ -42,8 +42,8 @@ Thumbs.db
 *.swp
 *.swo
 
-# Pipeline outputs (benchmark results in output/ are committed) & model weights
-output/debug/
+# Pipeline outputs & model weights
+output/
 *.part
 weights/
 *.onnx
